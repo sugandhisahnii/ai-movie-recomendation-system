@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Play, Plus, Heart } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { buildYouTubeEmbedUrl, pickTrailer } from '../utils/trailers';
+import API_BASE_URL from '../config/api';
 
 const buildPosterFallback = (title) => {
   const safeTitle = (title || 'AIMOVIE').replace(/&/g, '&amp;').slice(0, 24);
@@ -38,7 +39,7 @@ const MovieDetails = () => {
   useEffect(() => {
     const fetchMovie = async () => {
       try {
-        const res = await axios.get(`http://localhost:5001/api/movies/${id}`);
+        const res = await axios.get(`${API_BASE_URL}/api/movies/${id}`);
         setMovie(res.data);
         
         if (res.data.videos && res.data.videos.results) {
@@ -86,7 +87,7 @@ const MovieDetails = () => {
           params.set('title', targetTitle);
         }
 
-        const res = await axios.get(`http://localhost:5001/api/movies/recommend?${params.toString()}`);
+        const res = await axios.get(`${API_BASE_URL}/api/movies/recommend?${params.toString()}`);
         setRecommendations(res.data.results || []);
       } catch (err) {
         setRecommendations([]);
@@ -98,7 +99,7 @@ const MovieDetails = () => {
 
   const handleWatchlist = async () => {
      try {
-       await axios.post('http://localhost:5001/api/watchlist', {
+       await axios.post(`${API_BASE_URL}/api/watchlist`, {
          movieId: movie.id,
          title: movie.title || movie.name,
          posterPath: movie.poster_path

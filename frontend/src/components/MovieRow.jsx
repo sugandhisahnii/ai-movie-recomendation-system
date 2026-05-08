@@ -3,6 +3,7 @@ import axios from 'axios';
 import { ChevronLeft, ChevronRight, Info, LoaderCircle, Play, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { buildYouTubeEmbedUrl, pickTrailer } from '../utils/trailers';
+import API_BASE_URL from '../config/api';
 
 const REQUEST_TIMEOUT_MS = 4000;
 
@@ -62,7 +63,7 @@ const MovieRow = ({ title, fetchUrl, isLargeRow = false }) => {
 
     const fetchData = async () => {
       try {
-        const request = await axios.get(`http://localhost:5001${fetchUrl}`, {
+        const request = await axios.get(`${API_BASE_URL}${fetchUrl}`, {
           timeout: REQUEST_TIMEOUT_MS,
           signal: controller.signal
         });
@@ -142,7 +143,7 @@ const MovieRow = ({ title, fetchUrl, isLargeRow = false }) => {
     }
 
     try {
-      const res = await axios.get(`http://localhost:5001/api/movies/${movie.id}`, {
+      const res = await axios.get(`${API_BASE_URL}/api/movies/${movie.id}`, {
         timeout: REQUEST_TIMEOUT_MS
       });
       const trailer = pickTrailer(res.data?.videos?.results);

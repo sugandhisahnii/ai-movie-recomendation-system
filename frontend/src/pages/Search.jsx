@@ -2,8 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { Search as SearchIcon, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-const API_BASE_URL = 'http://localhost:5001';
+import API_BASE_URL from '../config/api';
 
 const MOOD_KEYWORDS = {
   sad: ['sad', 'heartbroken', 'melancholy', 'emotional'],

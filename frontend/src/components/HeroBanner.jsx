@@ -4,6 +4,7 @@ import { Play, Info, Volume2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import heroImage from '../assets/hero.png';
 import { buildYouTubeEmbedUrl, pickTrailer } from '../utils/trailers';
+import API_BASE_URL from '../config/api';
 
 const REQUEST_TIMEOUT_MS = 4000;
 const FALLBACK_HERO = {
@@ -24,7 +25,7 @@ const HeroBanner = ({ refreshKey = 0 }) => {
 
     const fetchTrending = async () => {
       try {
-        const res = await axios.get(`http://localhost:5001/api/ml/collection?kind=featured&limit=8&seed=${refreshKey || Date.now()}`, {
+        const res = await axios.get(`${API_BASE_URL}/api/ml/collection?kind=featured&limit=8&seed=${refreshKey || Date.now()}`, {
           timeout: REQUEST_TIMEOUT_MS,
           signal: controller.signal
         });
@@ -33,7 +34,7 @@ const HeroBanner = ({ refreshKey = 0 }) => {
           setMovie(randomMovie);
 
           try {
-            const detailRes = await axios.get(`http://localhost:5001/api/movies/${randomMovie.id}`, {
+            const detailRes = await axios.get(`${API_BASE_URL}/api/movies/${randomMovie.id}`, {
               timeout: REQUEST_TIMEOUT_MS,
               signal: controller.signal
             });

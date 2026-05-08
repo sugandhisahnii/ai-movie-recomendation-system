@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
+import API_BASE_URL from '../config/api';
 
 const buildFallbackPoster = (title) => {
   const safeTitle = (title || 'AIMOVIE').replace(/&/g, '&amp;').slice(0, 24);
@@ -40,7 +41,7 @@ const Watchlist = () => {
 
     const fetchWatchlist = async () => {
       try {
-        const res = await axios.get('http://localhost:5001/api/watchlist');
+        const res = await axios.get(`${API_BASE_URL}/api/watchlist`);
         setWatchlist(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         if (err.response?.status === 401) {
@@ -58,7 +59,7 @@ const Watchlist = () => {
 
   const handleRemove = async (movieId) => {
     try {
-      const res = await axios.delete(`http://localhost:5001/api/watchlist/${movieId}`);
+      const res = await axios.delete(`${API_BASE_URL}/api/watchlist/${movieId}`);
       setWatchlist(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       if (err.response?.status === 401) {

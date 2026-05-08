@@ -1,8 +1,8 @@
 import { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import API_BASE_URL from '../config/api';
 
 export const AuthContext = createContext();
-const API_BASE_URL = 'http://localhost:5001';
 
 const persistAuth = (payload) => {
   localStorage.setItem('token', payload.token);
