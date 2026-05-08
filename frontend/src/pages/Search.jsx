@@ -1,0 +1,300 @@
+import { useState } from 'react';
+import axios from 'axios';
+import { Search as SearchIcon, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+const API_BASE_URL = 'http://localhost:5001';
+
+const MOOD_KEYWORDS = {
+  sad: ['sad', 'heartbroken', 'melancholy', 'emotional'],
+  romantic: ['romantic', 'romance', 'love'],
+  thriller: ['thriller', 'suspense', 'tense'],
+  'feel good': ['feel good', 'happy', 'uplifting', 'cheerful'],
+  dark: ['dark', 'gritty', 'bleak', 'intense'],
+  action: ['action', 'adrenaline'],
+  funny: ['funny', 'comedy', 'laugh'],
+  scary: ['scary', 'horror', 'creepy'],
+  'sci-fi': ['sci-fi', 'science fiction', 'space', 'futuristic']
+};
+
+const LANGUAGE_OPTIONS = [
+  { label: 'Any Language', value: '' },
+  { label: 'English', value: 'en' },
+  { label: 'Hindi', value: 'hi' },
+  { label: 'Korean', value: 'ko' },
+  { label: 'Japanese', value: 'ja' },
+  { label: 'Tamil', value: 'ta' },
+  { label: 'Telugu', value: 'te' }
+];
+
+const QUICK_MOODS = ['Sad', 'Romantic', 'Thriller', 'Feel Good', 'Dark', 'Sci-Fi'];
+
+const shuffleArray = (items) => {
+  const output = [...(items || [])];
+  for (let index = output.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [output[index], output[swapIndex]] = [output[swapIndex], output[index]];
+  }
+  return output;
+};
+
+const buildFallbackPoster = (title) => {
+  const safeTitle = (title || 'AIMOVIE').replace(/&/g, '&amp;').slice(0, 24);
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="500" height="750" viewBox="0 0 500 750">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#1e293b" />
+          <stop offset="100%" stop-color="#0f172a" />
+        </linearGradient>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#bg)" />
+      <text x="50%" y="44%" text-anchor="middle" fill="#ef4444" font-size="42" font-family="Arial, sans-serif" font-weight="700">AIMOVIE</text>
+      <text x="50%" y="56%" text-anchor="middle" fill="#f8fafc" font-size="24" font-family="Arial, sans-serif">${safeTitle}</text>
+    </svg>
+  `;
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+};
+
+const detectIntent = (query) => {
+  const normalized = query.trim().toLowerCase();
+  const matchedMood = Object.entries(MOOD_KEYWORDS).find(([, aliases]) => (
+    aliases.some((alias) => normalized.includes(alias))
+  ));
+
+  if (matchedMood) {
+    return { type: 'mood', label: matchedMood[0] };
+  }
+
+  return { type: 'title', label: '' };
+};
+
+const MovieGrid = ({ title, items, scoreLabel }) => {
+  if (!items?.length) {
+    return null;
+  }
+
+  return (
+    <section className="mb-12">
+      <h2 className="text-2xl font-bold mb-5">{title}</h2>
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        {items.map((movie, index) => {
+          const movieId = movie.movie_id || movie.id || `movie-${index}`;
+          const movieLabel = movie.title || movie.name || movie.original_title || `item-${index}`;
+
+          return (
+          <Link to={`/movie/${movieId}`} key={`${movieId}-${movieLabel}-${index}`} className="group relative">
+            <div className="aspect-[2/3] overflow-hidden rounded-md bg-gray-800">
+              <img
+                src={movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : buildFallbackPoster(movie.title)}
+                alt={movie.title}
+                className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+              />
+            </div>
+            <div className="mt-3">
+              <h3 className="text-white font-semibold leading-snug">{movie.title}</h3>
+              <div className="flex items-center justify-between text-sm text-gray-400 mt-1">
+                <span>{movie.release_year || 'NA'}</span>
+                {movie[scoreLabel] ? <span>{(movie[scoreLabel] * 100).toFixed(1)}%</span> : null}
+              </div>
+            </div>
+          </Link>
+        )})}
+      </div>
+    </section>
+  );
+};
+
+const Search = () => {
+  const [query, setQuery] = useState('');
+  const [language, setLanguage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
+  const [result, setResult] = useState(null);
+
+  const fetchMlResults = async (input, forcedIntent = null) => {
+    const trimmedQuery = input.trim();
+    if (!trimmedQuery) {
+      return;
+    }
+
+    setLoading(true);
+    setStatusMessage('');
+
+    try {
+      const intent = forcedIntent || detectIntent(trimmedQuery);
+      const params = new URLSearchParams();
+      const endpoint = intent.type === 'mood' ? '/api/ml/mood' : '/api/ml/search';
+
+      params.set(intent.type === 'mood' ? 'mood' : 'query', trimmedQuery);
+      params.set('limit', '10');
+      if (language) {
+        params.set('language', language);
+      }
+
+      const response = await axios.get(`${API_BASE_URL}${endpoint}?${params.toString()}`);
+      setResult({
+        ...response.data,
+        intent: intent.type
+      });
+
+      const hasUsefulResults = response.data.top_matches?.length || response.data.recommended?.length;
+      if (!hasUsefulResults) {
+        setStatusMessage('No strong ML matches found for this query.');
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || 'Search is unavailable right now. Try a different movie name or mood.';
+      setResult(null);
+      setStatusMessage(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (event) => {
+    event.preventDefault();
+    fetchMlResults(query);
+  };
+
+  const handleMoodClick = (mood) => {
+    setQuery(mood);
+    fetchMlResults(mood, { type: 'mood', label: mood.toLowerCase() });
+  };
+
+  const handleShuffleResults = () => {
+    if (!result) {
+      return;
+    }
+
+    setResult((current) => {
+      if (!current) {
+        return current;
+      }
+
+      return {
+        ...current,
+        recommended: shuffleArray(current.recommended),
+        trending_in_language: shuffleArray(current.trending_in_language)
+      };
+    });
+  };
+
+  const intentSummary = result?.intent === 'mood'
+    ? `Mood detected: ${result.detected_mood || 'custom'}`
+    : result?.top_matches?.[0]
+      ? `Best title match: ${result.top_matches[0].title}`
+      : '';
+
+  return (
+    <div className="pt-24 px-8 min-h-screen">
+      <div className="max-w-6xl mx-auto">
+        <div className="max-w-3xl mb-10">
+          <h1 className="text-4xl font-bold mb-4">Search with ML</h1>
+          <p className="text-gray-400 text-lg">
+            Search by movie title or type a mood like <span className="text-white">sad</span>, <span className="text-white">romantic</span>, <span className="text-white">thriller</span>, <span className="text-white">feel good</span>.
+          </p>
+        </div>
+
+        <form onSubmit={handleSearch} className="grid gap-4 md:grid-cols-[1fr_200px_140px] mb-8">
+          <div className="relative">
+            <input
+              type="text"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search title or mood..."
+              className="w-full py-4 pl-12 pr-4 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-netflix-red border-none text-lg"
+            />
+            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
+          </div>
+
+          <select
+            value={language}
+            onChange={(event) => setLanguage(event.target.value)}
+            className="rounded-lg bg-gray-800 text-white px-4 py-4 focus:outline-none focus:ring-2 focus:ring-netflix-red"
+          >
+            {LANGUAGE_OPTIONS.map((option) => (
+              <option key={option.value || 'all'} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="submit"
+            className="rounded-lg bg-netflix-red px-6 py-4 font-semibold text-white hover:opacity-90 transition"
+          >
+            Search
+          </button>
+        </form>
+
+        <div className="flex flex-wrap gap-3 mb-10">
+          {QUICK_MOODS.map((mood) => (
+            <button
+              key={mood}
+              onClick={() => handleMoodClick(mood)}
+              className="inline-flex items-center gap-2 rounded-full bg-gray-800 px-5 py-3 text-white font-medium hover:bg-gray-700 transition"
+            >
+              <Sparkles size={16} />
+              {mood}
+            </button>
+          ))}
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center mt-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+          </div>
+        ) : null}
+
+        {!loading && statusMessage ? (
+          <div className="mb-6 rounded-lg border border-gray-700 bg-gray-900/80 px-4 py-3 text-sm text-gray-300">
+            {statusMessage}
+          </div>
+        ) : null}
+
+        {!loading && result ? (
+          <>
+            <div className="mb-8 flex flex-wrap items-center justify-between gap-4 text-sm text-gray-400">
+              <div className="flex flex-wrap items-center gap-3">
+                {intentSummary ? <span>{intentSummary}</span> : null}
+                {result.detected_language ? <span>Language: {result.detected_language.toUpperCase()}</span> : null}
+              </div>
+
+              {(result.recommended?.length || result.trending_in_language?.length) ? (
+                <button
+                  onClick={handleShuffleResults}
+                  className="rounded-full border border-gray-700 bg-gray-900/80 px-4 py-2 text-white hover:bg-gray-800 transition"
+                >
+                  Shuffle Results
+                </button>
+              ) : null}
+            </div>
+
+            <MovieGrid
+              title="Top Matches"
+              items={result.top_matches}
+              scoreLabel={result.intent === 'mood' ? 'mood_score' : 'match_score'}
+            />
+
+            <MovieGrid
+              title="Recommended for You"
+              items={result.recommended}
+              scoreLabel={result.intent === 'mood' ? 'recommendation_score' : 'score'}
+            />
+
+            {result.trending_in_language?.length ? (
+              <MovieGrid
+                title={`Trending${result.detected_language ? ` in ${result.detected_language.toUpperCase()}` : ''}`}
+                items={result.trending_in_language}
+                scoreLabel=""
+              />
+            ) : null}
+          </>
+        ) : null}
+      </div>
+    </div>
+  );
+};
+
+export default Search;
