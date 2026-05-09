@@ -31,9 +31,20 @@ const Watchlist = () => {
   ));
 
   useEffect(() => {
-    const storedWatchlist = JSON.parse(localStorage.getItem(WATCHLIST_STORAGE_KEY) || '[]');
-    setWatchlist(Array.isArray(storedWatchlist) ? storedWatchlist : []);
-    setLoading(false);
+    const syncWatchlist = () => {
+      const storedWatchlist = JSON.parse(localStorage.getItem(WATCHLIST_STORAGE_KEY) || '[]');
+      setWatchlist(Array.isArray(storedWatchlist) ? storedWatchlist : []);
+      setLoading(false);
+    };
+
+    syncWatchlist();
+    window.addEventListener('storage', syncWatchlist);
+    window.addEventListener('focus', syncWatchlist);
+
+    return () => {
+      window.removeEventListener('storage', syncWatchlist);
+      window.removeEventListener('focus', syncWatchlist);
+    };
   }, []);
 
   const handleRemove = (movieId) => {

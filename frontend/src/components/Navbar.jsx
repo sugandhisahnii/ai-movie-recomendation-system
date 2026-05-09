@@ -17,11 +17,11 @@ const Navbar = () => {
     <header className={`fixed top-0 w-full z-50 transition-colors duration-300 ${isScrolled ? 'bg-netflix-dark' : 'bg-gradient-to-b from-black/80 to-transparent'}`}>
       <div className="flex items-center justify-between px-4 md:px-12 py-4">
         <div className="flex items-center gap-8">
-          <Link to="/" className="text-netflix-red text-2xl md:text-3xl font-bold tracking-wider">
+          <Link to="/browse" className="text-netflix-red text-2xl md:text-3xl font-bold tracking-wider">
             AIMOVIE
           </Link>
           <nav className="hidden md:flex gap-4 text-sm">
-            <Link to="/" className="hover:text-gray-300 transition">Home</Link>
+            <Link to="/browse" className="hover:text-gray-300 transition">Home</Link>
             <Link to="/watchlist" className="hover:text-gray-300 transition">My List</Link>
           </nav>
         </div>

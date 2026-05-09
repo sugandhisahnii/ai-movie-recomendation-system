@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Search as SearchIcon, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import API_BASE_URL from '../config/api';
+import { getFallbackMoodResult, getFallbackSearchResult } from '../utils/fallbackMovies';
 
 const MOOD_KEYWORDS = {
   sad: ['sad', 'heartbroken', 'melancholy', 'emotional'],
@@ -143,9 +144,15 @@ const Search = () => {
         setStatusMessage('No strong ML matches found for this query.');
       }
     } catch (error) {
-      const message = error.response?.data?.message || 'Search is unavailable right now. Try a different movie name or mood.';
-      setResult(null);
-      setStatusMessage(message);
+      const fallbackResult = intent.type === 'mood'
+        ? getFallbackMoodResult(trimmedQuery, language)
+        : getFallbackSearchResult(trimmedQuery, language);
+
+      setResult({
+        ...fallbackResult,
+        intent: intent.type
+      });
+      setStatusMessage('Live prediction service is unavailable. Showing fallback recommendations.');
     } finally {
       setLoading(false);
     }

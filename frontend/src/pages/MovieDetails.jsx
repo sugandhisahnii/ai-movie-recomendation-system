@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Play, Plus, Heart } from 'lucide-react';
 import { buildYouTubeEmbedUrl, pickTrailer } from '../utils/trailers';
 import API_BASE_URL from '../config/api';
+import { getFallbackRecommendations } from '../utils/fallbackMovies';
 
 const WATCHLIST_STORAGE_KEY = 'aimovie_watchlist';
 
@@ -102,14 +103,14 @@ const MovieDetails = () => {
         const res = await axios.get(`${API_BASE_URL}/api/movies/recommend?${params.toString()}`);
         setRecommendations(res.data.results || []);
       } catch (err) {
-        setRecommendations([]);
+        setRecommendations(getFallbackRecommendations(targetMovieId));
       }
     };
 
     fetchRecommendations();
   }, [id, movie?.id, movie?.movie_id, movie?.title, movie?.name]);
 
-  const handleWatchlist = async () => {
+  const handleWatchlist = () => {
     const storedWatchlist = JSON.parse(localStorage.getItem(WATCHLIST_STORAGE_KEY) || '[]');
     const nextEntry = {
       movieId: String(movie.id || movie.movie_id),
@@ -118,7 +119,10 @@ const MovieDetails = () => {
     };
 
     if (storedWatchlist.some((entry) => String(entry.movieId) === nextEntry.movieId)) {
-      alert('Already in watchlist.');
+      const nextWatchlist = storedWatchlist.filter((entry) => String(entry.movieId) !== nextEntry.movieId);
+      localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(nextWatchlist));
+      setIsSaved(false);
+      alert('Removed from watchlist.');
       return;
     }
 
