@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search as SearchIcon, Sparkles } from 'lucide-react';
+import { Sparkles, Library, Search as SearchIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import API_BASE_URL from '../config/api';
 import { getFallbackMoodResult, getFallbackSearchResult } from '../utils/fallbackMovies';
+import SearchBar from '../components/SearchBar';
+import FilterPanel from '../components/FilterPanel';
 
 const MOOD_KEYWORDS = {
   sad: ['sad', 'heartbroken', 'melancholy', 'emotional'],
@@ -95,7 +97,7 @@ const MovieGrid = ({ title, items, scoreLabel }) => {
             <div className="mt-3">
               <h3 className="text-white font-semibold leading-snug">{movie.title}</h3>
               <div className="flex items-center justify-between text-sm text-gray-400 mt-1">
-                <span>{movie.release_year || 'NA'}</span>
+                <span>{movie.release_date ? movie.release_date.slice(0, 4) : (movie.release_year || 'NA')}</span>
                 {movie[scoreLabel] ? <span>{(movie[scoreLabel] * 100).toFixed(1)}%</span> : null}
               </div>
             </div>
@@ -107,11 +109,21 @@ const MovieGrid = ({ title, items, scoreLabel }) => {
 };
 
 const Search = () => {
-  const [query, setQuery] = useState('');
-  const [language, setLanguage] = useState('');
+  const [searchMode, setSearchMode] = useState('ml'); // 'ml' or 'advanced'
+  
+  // Shared
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
+
+  // ML Search State
+  const [query, setQuery] = useState('');
+  const [language, setLanguage] = useState('');
   const [result, setResult] = useState(null);
+
+  // Advanced Search State
+  const [advancedQuery, setAdvancedQuery] = useState('');
+  const [advancedFilters, setAdvancedFilters] = useState({});
+  const [advancedResults, setAdvancedResults] = useState(null);
 
   const fetchMlResults = async (input, forcedIntent = null) => {
     const trimmedQuery = input.trim();
@@ -144,6 +156,7 @@ const Search = () => {
         setStatusMessage('No strong ML matches found for this query.');
       }
     } catch (error) {
+      console.error(error);
       const fallbackResult = intent.type === 'mood'
         ? getFallbackMoodResult(trimmedQuery, language)
         : getFallbackSearchResult(trimmedQuery, language);
@@ -152,38 +165,80 @@ const Search = () => {
         ...fallbackResult,
         intent: intent.type
       });
-      setStatusMessage('Live prediction service is unavailable. Showing fallback recommendations.');
+      setStatusMessage('Live prediction service is unavailable or model is missing. Showing fallback recommendations.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = (event) => {
+  const fetchAdvancedResults = async () => {
+    setLoading(true);
+    setStatusMessage('');
+
+    try {
+      const params = new URLSearchParams();
+      let endpoint = '/api/movies/discover';
+
+      // Clean empty filters
+      Object.entries(advancedFilters).forEach(([key, value]) => {
+        if (value) params.set(key, value);
+      });
+
+      if (advancedQuery.trim()) {
+        endpoint = '/api/movies/search';
+        params.set('query', advancedQuery.trim());
+      }
+
+      const response = await axios.get(`${API_BASE_URL}${endpoint}?${params.toString()}`);
+      
+      if (response.data?.results) {
+        setAdvancedResults(response.data.results);
+        if (response.data.results.length === 0) {
+          setStatusMessage('No movies found matching your filters.');
+        }
+      } else {
+        setAdvancedResults([]);
+        setStatusMessage('No movies found matching your filters.');
+      }
+
+    } catch (error) {
+      console.error("Advanced search error:", error);
+      setStatusMessage('Failed to fetch movies with these filters. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Trigger advanced search automatically when filters change
+  useEffect(() => {
+    if (searchMode === 'advanced') {
+      fetchAdvancedResults();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [advancedFilters, searchMode]);
+
+  const handleMlSearch = (event) => {
     event.preventDefault();
     fetchMlResults(query);
   };
 
+  const handleAdvancedSearchSubmit = (searchQuery) => {
+    fetchAdvancedResults();
+  };
+
   const handleMoodClick = (mood) => {
+    setSearchMode('ml');
     setQuery(mood);
     fetchMlResults(mood, { type: 'mood', label: mood.toLowerCase() });
   };
 
   const handleShuffleResults = () => {
-    if (!result) {
-      return;
-    }
-
-    setResult((current) => {
-      if (!current) {
-        return current;
-      }
-
-      return {
-        ...current,
-        recommended: shuffleArray(current.recommended),
-        trending_in_language: shuffleArray(current.trending_in_language)
-      };
-    });
+    if (!result) return;
+    setResult((current) => ({
+      ...current,
+      recommended: shuffleArray(current?.recommended),
+      trending_in_language: shuffleArray(current?.trending_in_language)
+    }));
   };
 
   const intentSummary = result?.intent === 'mood'
@@ -195,61 +250,102 @@ const Search = () => {
   return (
     <div className="pt-24 px-8 min-h-screen">
       <div className="max-w-6xl mx-auto">
-        <div className="max-w-3xl mb-10">
-          <h1 className="text-4xl font-bold mb-4">Search with ML</h1>
-          <p className="text-gray-400 text-lg">
-            Search by movie title or type a mood like <span className="text-white">sad</span>, <span className="text-white">romantic</span>, <span className="text-white">thriller</span>, <span className="text-white">feel good</span>.
-          </p>
-        </div>
-
-        <form onSubmit={handleSearch} className="grid gap-4 md:grid-cols-[1fr_200px_140px] mb-8">
-          <div className="relative">
-            <input
-              type="text"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search title or mood..."
-              className="w-full py-4 pl-12 pr-4 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-netflix-red border-none text-lg"
-            />
-            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
+        <div className="max-w-3xl mb-8 flex justify-between items-end">
+          <div>
+            <h1 className="text-4xl font-bold mb-4">Discover Movies</h1>
+            <p className="text-gray-400 text-lg">
+              {searchMode === 'ml' 
+                ? <span>Search by movie title or type a mood like <span className="text-white">sad</span>, <span className="text-white">romantic</span>, <span className="text-white">thriller</span>.</span>
+                : <span>Find exactly what you're looking for with advanced filters.</span>
+              }
+            </p>
           </div>
-
-          <select
-            value={language}
-            onChange={(event) => setLanguage(event.target.value)}
-            className="rounded-lg bg-gray-800 text-white px-4 py-4 focus:outline-none focus:ring-2 focus:ring-netflix-red"
-          >
-            {LANGUAGE_OPTIONS.map((option) => (
-              <option key={option.value || 'all'} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-
-          <button
-            type="submit"
-            className="rounded-lg bg-netflix-red px-6 py-4 font-semibold text-white hover:opacity-90 transition"
-          >
-            Search
-          </button>
-        </form>
-
-        <div className="flex flex-wrap gap-3 mb-10">
-          {QUICK_MOODS.map((mood) => (
+          
+          <div className="flex bg-gray-800 rounded-lg p-1">
             <button
-              key={mood}
-              onClick={() => handleMoodClick(mood)}
-              className="inline-flex items-center gap-2 rounded-full bg-gray-800 px-5 py-3 text-white font-medium hover:bg-gray-700 transition"
+              onClick={() => setSearchMode('ml')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md transition font-medium ${searchMode === 'ml' ? 'bg-netflix-red text-white' : 'text-gray-400 hover:text-white'}`}
             >
-              <Sparkles size={16} />
-              {mood}
+              <Sparkles size={18} /> ML Search
             </button>
-          ))}
+            <button
+              onClick={() => setSearchMode('advanced')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md transition font-medium ${searchMode === 'advanced' ? 'bg-netflix-red text-white' : 'text-gray-400 hover:text-white'}`}
+            >
+              <Library size={18} /> Advanced
+            </button>
+          </div>
         </div>
+
+        {searchMode === 'ml' ? (
+          <>
+            <form onSubmit={handleMlSearch} className="grid gap-4 md:grid-cols-[1fr_200px_140px] mb-8">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search title or mood..."
+                  className="w-full py-4 pl-12 pr-4 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-netflix-red border-none text-lg"
+                />
+                <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
+              </div>
+
+              <select
+                value={language}
+                onChange={(event) => setLanguage(event.target.value)}
+                className="rounded-lg bg-gray-800 text-white px-4 py-4 focus:outline-none focus:ring-2 focus:ring-netflix-red"
+              >
+                {LANGUAGE_OPTIONS.map((option) => (
+                  <option key={option.value || 'all'} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                type="submit"
+                className="rounded-lg bg-netflix-red px-6 py-4 font-semibold text-white hover:opacity-90 transition"
+              >
+                Search
+              </button>
+            </form>
+
+            <div className="flex flex-wrap gap-3 mb-10">
+              {QUICK_MOODS.map((mood) => (
+                <button
+                  key={mood}
+                  onClick={() => handleMoodClick(mood)}
+                  className="inline-flex items-center gap-2 rounded-full bg-gray-800 px-5 py-3 text-white font-medium hover:bg-gray-700 transition"
+                >
+                  <Sparkles size={16} />
+                  {mood}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="mb-10">
+            <div className="flex gap-4">
+              <SearchBar 
+                query={advancedQuery} 
+                setQuery={setAdvancedQuery} 
+                onSearch={handleAdvancedSearchSubmit} 
+              />
+              <button
+                onClick={() => handleAdvancedSearchSubmit()}
+                className="rounded-lg bg-netflix-red px-6 py-4 font-semibold text-white hover:opacity-90 transition shrink-0"
+              >
+                Search
+              </button>
+            </div>
+            <FilterPanel filters={advancedFilters} setFilters={setAdvancedFilters} />
+          </div>
+        )}
 
         {loading ? (
           <div className="flex justify-center mt-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-netflix-red"></div>
           </div>
         ) : null}
 
@@ -259,7 +355,8 @@ const Search = () => {
           </div>
         ) : null}
 
-        {!loading && result ? (
+        {/* Render ML Results */}
+        {!loading && searchMode === 'ml' && result ? (
           <>
             <div className="mb-8 flex flex-wrap items-center justify-between gap-4 text-sm text-gray-400">
               <div className="flex flex-wrap items-center gap-3">
@@ -297,6 +394,14 @@ const Search = () => {
               />
             ) : null}
           </>
+        ) : null}
+
+        {/* Render Advanced Results */}
+        {!loading && searchMode === 'advanced' && advancedResults?.length > 0 ? (
+          <MovieGrid
+            title="Search Results"
+            items={advancedResults}
+          />
         ) : null}
       </div>
     </div>
