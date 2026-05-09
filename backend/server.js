@@ -17,6 +17,10 @@ const allowedOrigins = new Set([
   'https://ai-movie-recommendation-system.vercel.app',
   ...configuredOrigins,
 ]);
+const allowedOriginPatterns = [
+  /^https:\/\/ai-movie-recomendation-system(?:-[a-z0-9-]+)?\.vercel\.app$/i,
+  /^https:\/\/ai-movie-recommendation-system(?:-[a-z0-9-]+)?\.vercel\.app$/i,
+];
 
 // Middleware
 const corsOptions = {
@@ -26,6 +30,10 @@ const corsOptions = {
     }
 
     if (allowedOrigins.has(origin)) {
+      return callback(null, true);
+    }
+
+    if (allowedOriginPatterns.some((pattern) => pattern.test(origin))) {
       return callback(null, true);
     }
 
