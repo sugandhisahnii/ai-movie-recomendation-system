@@ -1,9 +1,8 @@
-import { useContext, useEffect, useState } from 'react';
-import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
-import { AuthContext } from '../context/AuthContext';
-import API_BASE_URL from '../config/api';
+
+const WATCHLIST_STORAGE_KEY = 'aimovie_watchlist';
 
 const buildFallbackPoster = (title) => {
   const safeTitle = (title || 'AIMOVIE').replace(/&/g, '&amp;').slice(0, 24);
@@ -27,62 +26,24 @@ const buildFallbackPoster = (title) => {
 const Watchlist = () => {
   const [watchlist, setWatchlist] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user, logout } = useContext(AuthContext);
-  const navigate = useNavigate();
   const uniqueWatchlist = watchlist.filter((movie, index, items) => (
     items.findIndex((candidate) => String(candidate.movieId) === String(movie.movieId)) === index
   ));
 
   useEffect(() => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+    const storedWatchlist = JSON.parse(localStorage.getItem(WATCHLIST_STORAGE_KEY) || '[]');
+    setWatchlist(Array.isArray(storedWatchlist) ? storedWatchlist : []);
+    setLoading(false);
+  }, []);
 
-    const fetchWatchlist = async () => {
-      try {
-        const res = await axios.get(`${API_BASE_URL}/api/watchlist`);
-        setWatchlist(Array.isArray(res.data) ? res.data : []);
-      } catch (err) {
-        if (err.response?.status === 401) {
-          logout();
-          navigate('/login');
-          return;
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchWatchlist();
-  }, [logout, navigate, user]);
-
-  const handleRemove = async (movieId) => {
-    try {
-      const res = await axios.delete(`${API_BASE_URL}/api/watchlist/${movieId}`);
-      setWatchlist(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      if (err.response?.status === 401) {
-        logout();
-        navigate('/login');
-      }
-    }
+  const handleRemove = (movieId) => {
+    const nextWatchlist = uniqueWatchlist.filter((movie) => String(movie.movieId) !== String(movieId));
+    localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(nextWatchlist));
+    setWatchlist(nextWatchlist);
   };
 
   if (loading) {
     return <div className="pt-24 px-8 text-white">Loading watchlist...</div>;
-  }
-
-  if (!user) {
-    return (
-      <div className="pt-24 px-8 text-white">
-        <h1 className="text-3xl font-bold mb-4">My Watchlist</h1>
-        <p className="text-gray-300 mb-6">Sign in to save movies to your watchlist.</p>
-        <Link to="/login" className="inline-block bg-netflix-red px-6 py-3 rounded-md font-semibold">
-          Sign In
-        </Link>
-      </div>
-    );
   }
 
   return (
@@ -90,7 +51,12 @@ const Watchlist = () => {
       <h1 className="text-4xl font-bold text-white mb-8">My Watchlist</h1>
 
       {uniqueWatchlist.length === 0 ? (
-        <p className="text-gray-300">No movies added yet.</p>
+        <div>
+          <p className="text-gray-300">No movies added yet.</p>
+          <Link to="/browse" className="mt-6 inline-block rounded-md bg-netflix-red px-6 py-3 font-semibold text-white">
+            Browse Movies
+          </Link>
+        </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
           {uniqueWatchlist.map((movie, index) => (

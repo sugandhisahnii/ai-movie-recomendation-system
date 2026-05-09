@@ -1,10 +1,11 @@
 import { Link, useSearchParams, useParams } from 'react-router-dom';
-import { useEffect, useRef, useState, useContext } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { Play, Plus, Heart } from 'lucide-react';
-import { AuthContext } from '../context/AuthContext';
 import { buildYouTubeEmbedUrl, pickTrailer } from '../utils/trailers';
 import API_BASE_URL from '../config/api';
+
+const WATCHLIST_STORAGE_KEY = 'aimovie_watchlist';
 
 const buildPosterFallback = (title) => {
   const safeTitle = (title || 'AIMOVIE').replace(/&/g, '&amp;').slice(0, 24);
@@ -32,7 +33,7 @@ const MovieDetails = () => {
   const [trailerUrl, setTrailerUrl] = useState('');
   const [recommendations, setRecommendations] = useState([]);
   const [showWatchSection, setShowWatchSection] = useState(false);
-  const { user, logout } = useContext(AuthContext);
+  const [isSaved, setIsSaved] = useState(false);
   const watchSectionRef = useRef(null);
   const autoplayHandledRef = useRef('');
 
@@ -69,6 +70,17 @@ const MovieDetails = () => {
   }, [id]);
 
   useEffect(() => {
+    if (!movie) {
+      setIsSaved(false);
+      return;
+    }
+
+    const storedWatchlist = JSON.parse(localStorage.getItem(WATCHLIST_STORAGE_KEY) || '[]');
+    const targetMovieId = String(movie.id || movie.movie_id || '');
+    setIsSaved(storedWatchlist.some((entry) => String(entry.movieId) === targetMovieId));
+  }, [movie]);
+
+  useEffect(() => {
     const fetchRecommendations = async () => {
       const targetMovieId = movie?.id || movie?.movie_id || id;
       const targetTitle = movie?.title || movie?.name;
@@ -98,23 +110,21 @@ const MovieDetails = () => {
   }, [id, movie?.id, movie?.movie_id, movie?.title, movie?.name]);
 
   const handleWatchlist = async () => {
-     try {
-       await axios.post(`${API_BASE_URL}/api/watchlist`, {
-         movieId: movie.id,
-         title: movie.title || movie.name,
-         posterPath: movie.poster_path
-       });
-       alert("Added to watchlist!");
-     } catch (err) {
-       if (err.response?.status === 401) {
-         logout();
-         alert("Session expired. Please sign in again.");
-         return;
-       }
+    const storedWatchlist = JSON.parse(localStorage.getItem(WATCHLIST_STORAGE_KEY) || '[]');
+    const nextEntry = {
+      movieId: String(movie.id || movie.movie_id),
+      title: movie.title || movie.name,
+      posterPath: movie.poster_path || '',
+    };
 
-       console.log('Watchlist request failed');
-       alert("Could not add to watchlist right now.");
-     }
+    if (storedWatchlist.some((entry) => String(entry.movieId) === nextEntry.movieId)) {
+      alert('Already in watchlist.');
+      return;
+    }
+
+    localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify([nextEntry, ...storedWatchlist]));
+    setIsSaved(true);
+    alert('Added to watchlist.');
   };
 
   const handlePlay = () => {
@@ -164,11 +174,12 @@ const MovieDetails = () => {
               alt={movie.title}
               className="w-full rounded-lg shadow-2xl"
            />
-           {user && (
-             <button onClick={handleWatchlist} className="absolute top-4 right-4 bg-black/60 p-3 rounded-full hover:bg-netflix-red transition text-white">
-                <Heart size={24} />
-             </button>
-           )}
+           <button
+             onClick={handleWatchlist}
+             className={`absolute top-4 right-4 p-3 rounded-full transition text-white ${isSaved ? 'bg-netflix-red' : 'bg-black/60 hover:bg-netflix-red'}`}
+           >
+              <Heart size={24} fill={isSaved ? 'currentColor' : 'none'} />
+           </button>
         </div>
 
         <div className="w-full md:w-2/3 text-white">
@@ -190,11 +201,9 @@ const MovieDetails = () => {
              >
                 <Play fill="black" /> Play
              </button>
-             {user && (
-               <button onClick={handleWatchlist} className="bg-gray-600/70 text-white px-8 py-3 rounded-md font-bold text-xl hover:bg-gray-600 transition flex items-center gap-2">
-                  <Plus /> My List
-               </button>
-             )}
+             <button onClick={handleWatchlist} className="bg-gray-600/70 text-white px-8 py-3 rounded-md font-bold text-xl hover:bg-gray-600 transition flex items-center gap-2">
+                <Plus /> {isSaved ? 'Saved' : 'My List'}
+             </button>
           </div>
 
           <div className="text-gray-400">
