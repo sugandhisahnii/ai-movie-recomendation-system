@@ -63,18 +63,26 @@ const MovieRow = ({ title, fetchUrl, isLargeRow = false }) => {
 
     const fetchData = async () => {
       try {
-        const request = await axios.get(`${API_BASE_URL}${fetchUrl}`, {
+        // Add a random page (1 to 5) so that the UI shows different movies on refresh
+        const randomPage = Math.floor(Math.random() * 5) + 1;
+        const separator = fetchUrl.includes('?') ? '&' : '?';
+        const finalUrl = `${fetchUrl}${separator}page=${randomPage}`;
+
+        const request = await axios.get(`${API_BASE_URL}${finalUrl}`, {
           timeout: REQUEST_TIMEOUT_MS,
           signal: controller.signal
         });
         if (request.data && Array.isArray(request.data.results) && request.data.results.length > 0) {
-           setMovies(request.data.results);
+           // Shuffle the results array for even more variety
+           const shuffled = [...request.data.results].sort(() => 0.5 - Math.random());
+           setMovies(shuffled);
            return;
         }
 
         if (Array.isArray(request.data) && request.data.length > 0) {
            // For local mock array
-           setMovies(request.data);
+           const shuffled = [...request.data].sort(() => 0.5 - Math.random());
+           setMovies(shuffled);
            return;
         }
       } catch (err) {
