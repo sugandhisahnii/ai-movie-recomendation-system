@@ -7,6 +7,7 @@ const connectDB = require('./config/db');
 const app = express();
 const allowedOrigins = [
   'http://localhost:5173',
+  'http://localhost:3000',
   'https://ai-movie-recomendation-system.vercel.app',
   'https://ai-movie-recommendation-system.vercel.app',
   process.env.FRONTEND_URL
@@ -15,15 +16,17 @@ const allowedOrigins = [
 // Middleware
 app.use(cors({
   origin(origin, callback) {
-    // Allow non-browser requests and explicitly approved frontends.
     if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
 
-    return callback(new Error('Not allowed by CORS'));
+    return callback(null, true);
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+app.options('*', cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
