@@ -133,9 +133,9 @@ const Search = () => {
 
     setLoading(true);
     setStatusMessage('');
+    const intent = forcedIntent || detectIntent(trimmedQuery);
 
     try {
-      const intent = forcedIntent || detectIntent(trimmedQuery);
       const params = new URLSearchParams();
       const endpoint = intent.type === 'mood' ? '/api/ml/mood' : '/api/ml/search';
 

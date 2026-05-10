@@ -1,3 +1,6 @@
 node_modules
 .env
-.git
+.gits
+echo "node_modules
+.env
+.git" > .dockerignore
