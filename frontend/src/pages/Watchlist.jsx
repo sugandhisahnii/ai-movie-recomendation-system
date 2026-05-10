@@ -54,12 +54,12 @@ const Watchlist = () => {
   };
 
   if (loading) {
-    return <div className="pt-24 px-8 text-white">Loading watchlist...</div>;
+    return <div className="px-4 pt-24 text-white sm:px-6 md:px-8">Loading watchlist...</div>;
   }
 
   return (
-    <div className="pt-24 px-8 pb-16 min-h-screen">
-      <h1 className="text-4xl font-bold text-white mb-8">My Watchlist</h1>
+    <div className="min-h-screen px-4 pb-16 pt-24 sm:px-6 md:px-8">
+      <h1 className="mb-8 text-3xl font-bold text-white sm:text-4xl">My Watchlist</h1>
 
       {uniqueWatchlist.length === 0 ? (
         <div>
@@ -69,7 +69,7 @@ const Watchlist = () => {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-4 lg:grid-cols-5 lg:gap-6">
           {uniqueWatchlist.map((movie, index) => (
             <div key={`${movie.movieId}-${movie._id || movie.addedAt || index}`} className="group relative">
               <Link to={`/movie/${movie.movieId}`}>

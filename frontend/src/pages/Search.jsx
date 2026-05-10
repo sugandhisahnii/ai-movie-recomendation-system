@@ -248,12 +248,12 @@ const Search = () => {
       : '';
 
   return (
-    <div className="pt-24 px-8 min-h-screen">
+    <div className="min-h-screen px-4 pt-24 sm:px-6 md:px-8">
       <div className="max-w-6xl mx-auto">
-        <div className="max-w-3xl mb-8 flex justify-between items-end">
-          <div>
-            <h1 className="text-4xl font-bold mb-4">Discover Movies</h1>
-            <p className="text-gray-400 text-lg">
+        <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <h1 className="mb-4 text-3xl font-bold sm:text-4xl">Discover Movies</h1>
+            <p className="text-base text-gray-400 sm:text-lg">
               {searchMode === 'ml' 
                 ? <span>Search by movie title or type a mood like <span className="text-white">sad</span>, <span className="text-white">romantic</span>, <span className="text-white">thriller</span>.</span>
                 : <span>Find exactly what you're looking for with advanced filters.</span>
@@ -261,16 +261,16 @@ const Search = () => {
             </p>
           </div>
           
-          <div className="flex bg-gray-800 rounded-lg p-1">
+          <div className="flex w-full rounded-lg bg-gray-800 p-1 sm:w-fit">
             <button
               onClick={() => setSearchMode('ml')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md transition font-medium ${searchMode === 'ml' ? 'bg-netflix-red text-white' : 'text-gray-400 hover:text-white'}`}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition sm:flex-none sm:px-4 ${searchMode === 'ml' ? 'bg-netflix-red text-white' : 'text-gray-400 hover:text-white'}`}
             >
               <Sparkles size={18} /> ML Search
             </button>
             <button
               onClick={() => setSearchMode('advanced')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md transition font-medium ${searchMode === 'advanced' ? 'bg-netflix-red text-white' : 'text-gray-400 hover:text-white'}`}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition sm:flex-none sm:px-4 ${searchMode === 'advanced' ? 'bg-netflix-red text-white' : 'text-gray-400 hover:text-white'}`}
             >
               <Library size={18} /> Advanced
             </button>
@@ -286,15 +286,15 @@ const Search = () => {
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Search title or mood..."
-                  className="w-full py-4 pl-12 pr-4 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-netflix-red border-none text-lg"
+                  className="w-full rounded-lg border-none bg-gray-800 py-3 pl-11 pr-4 text-base text-white focus:outline-none focus:ring-2 focus:ring-netflix-red sm:py-4 sm:pl-12 sm:text-lg"
                 />
-                <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 sm:left-4" size={20} />
               </div>
 
               <select
                 value={language}
                 onChange={(event) => setLanguage(event.target.value)}
-                className="rounded-lg bg-gray-800 text-white px-4 py-4 focus:outline-none focus:ring-2 focus:ring-netflix-red"
+                className="rounded-lg bg-gray-800 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-netflix-red sm:py-4"
               >
                 {LANGUAGE_OPTIONS.map((option) => (
                   <option key={option.value || 'all'} value={option.value}>
@@ -305,7 +305,7 @@ const Search = () => {
 
               <button
                 type="submit"
-                className="rounded-lg bg-netflix-red px-6 py-4 font-semibold text-white hover:opacity-90 transition"
+                className="rounded-lg bg-netflix-red px-6 py-3 font-semibold text-white transition hover:opacity-90 sm:py-4"
               >
                 Search
               </button>

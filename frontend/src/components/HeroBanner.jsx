@@ -60,7 +60,7 @@ const HeroBanner = ({ refreshKey = 0 }) => {
     return () => controller.abort();
   }, [refreshKey]);
 
-  if (!movie) return <div className="h-[70vh] bg-netflix-dark animate-pulse"></div>;
+  if (!movie) return <div className="h-[72vh] min-h-[520px] bg-netflix-dark animate-pulse sm:h-[70vh]"></div>;
 
   const bgStyle = movie.backdrop_path ? {
     backgroundImage: `url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`,
@@ -73,46 +73,48 @@ const HeroBanner = ({ refreshKey = 0 }) => {
   };
 
   return (
-    <div style={trailerKey ? undefined : bgStyle} className="h-[80vh] text-white object-contain relative overflow-hidden">
+    <div style={trailerKey ? undefined : bgStyle} className="relative min-h-[620px] overflow-hidden text-white sm:min-h-[680px] md:h-[80vh]">
       {trailerKey ? (
         <iframe
           src={buildYouTubeEmbedUrl(trailerKey)}
           title={`${movie?.title || movie?.name || 'Featured'} trailer background`}
-          className="absolute inset-0 h-full w-full scale-[1.35] pointer-events-none"
+          className="pointer-events-none absolute inset-0 h-full w-full scale-[1.1] sm:scale-[1.2] md:scale-[1.35]"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         />
       ) : null}
 
       <div className="absolute inset-0 bg-black/20" />
-      <div className="absolute w-full h-[80vh] bg-gradient-to-t from-netflix-dark via-black/25 to-black/70 z-10" />
-      <div className="absolute w-full h-[80vh] bg-gradient-to-r from-netflix-dark via-black/45 to-transparent z-10" />
+      <div className="absolute z-10 h-full w-full bg-gradient-to-t from-netflix-dark via-black/25 to-black/70" />
+      <div className="absolute z-10 h-full w-full bg-gradient-to-r from-netflix-dark via-black/55 to-transparent" />
 
-      <div className="absolute top-[35%] w-full pl-8 md:pl-16 z-20">
-        <p className="mb-4 text-xs font-semibold uppercase tracking-[0.4em] text-red-200/80">
+      <div className="absolute inset-x-0 bottom-14 z-20 px-4 sm:bottom-16 sm:px-6 md:bottom-auto md:top-[30%] md:px-10 lg:px-16">
+        <div className="max-w-3xl">
+        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.3em] text-red-200/80 sm:mb-4 sm:text-xs sm:tracking-[0.4em]">
           Featured suggestion
         </p>
-        <h1 className="text-4xl md:text-6xl font-bold max-w-2xl text-shadow-md">
+        <h1 className="max-w-2xl text-3xl font-bold text-shadow-md sm:text-4xl md:text-5xl lg:text-6xl">
           {movie?.title || movie?.name || movie?.original_name}
         </h1>
-        <div className="my-6">
+        <div className="my-5 flex flex-col gap-3 sm:my-6 sm:flex-row">
           <Link to={`/movie/${movie.id}?autoplay=1`}>
-            <button className="bg-white text-black font-semibold py-2 px-6 rounded mr-4 hover:bg-gray-300 transition flex items-center justify-center gap-2 inline-flex shadow-lg">
+            <button className="inline-flex w-full items-center justify-center gap-2 rounded bg-white px-6 py-3 font-semibold text-black shadow-lg transition hover:bg-gray-300 sm:w-auto">
               <Play size={20} fill="black" /> Play
             </button>
           </Link>
           <Link to={`/movie/${movie.id}`}>
-            <button className="bg-gray-600/70 text-white font-semibold py-2 px-6 rounded hover:bg-gray-600 transition flex items-center justify-center gap-2 inline-flex shadow-lg">
+            <button className="inline-flex w-full items-center justify-center gap-2 rounded bg-gray-600/70 px-6 py-3 font-semibold text-white shadow-lg transition hover:bg-gray-600 sm:w-auto">
               <Info size={20} /> More Info
             </button>
           </Link>
         </div>
-        <p className="w-full md:max-w-[70%] lg:max-w-[50%] text-gray-200 text-sm md:text-base leading-snug text-shadow">
+        <p className="w-full text-sm leading-6 text-gray-200 text-shadow sm:max-w-[85%] md:max-w-[70%] md:text-base lg:max-w-[50%]">
           {movie?.overview?.length > 150 ? movie.overview.substring(0, 150) + '...' : movie?.overview}
         </p>
 
-        <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/35 px-4 py-2 text-sm text-white/85 backdrop-blur-sm">
+        <div className="mt-6 inline-flex max-w-full items-center gap-2 rounded-full border border-white/20 bg-black/35 px-4 py-2 text-xs text-white/85 backdrop-blur-sm sm:mt-8 sm:text-sm">
           <Volume2 size={16} />
-          <span>{trailerKey ? 'Trailer preview playing in background' : 'Backdrop preview mode'}</span>
+          <span className="truncate">{trailerKey ? 'Trailer preview playing in background' : 'Backdrop preview mode'}</span>
+        </div>
         </div>
       </div>
     </div>

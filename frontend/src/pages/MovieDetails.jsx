@@ -154,7 +154,7 @@ const MovieDetails = () => {
     handlePlay();
   }, [id, movie, searchParams]);
 
-  if (!movie) return <div className="pt-24 text-center">Loading...</div>;
+  if (!movie) return <div className="px-4 pt-24 text-center sm:px-6 md:px-8">Loading...</div>;
 
   const bgStyle = movie.backdrop_path ? {
     backgroundImage: `url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`,
@@ -167,12 +167,12 @@ const MovieDetails = () => {
   return (
     <div className="min-h-screen bg-netflix-dark relative">
       {/* Background Banner */}
-      <div style={bgStyle} className="h-[60vh] md:h-[70vh] w-full relative">
+      <div style={bgStyle} className="relative h-[42vh] min-h-[320px] w-full sm:h-[50vh] md:h-[70vh]">
          <div className="absolute inset-0 bg-gradient-to-t from-netflix-dark via-netflix-dark/60 to-transparent"></div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-8 relative -mt-32 md:-mt-64 z-10 flex flex-col md:flex-row gap-12">
-        <div className="w-full md:w-1/3 flex-shrink-0 relative group">
+      <div className="relative z-10 mx-auto flex max-w-7xl flex-col gap-8 px-4 sm:px-6 md:-mt-48 md:flex-row md:gap-12 md:px-8">
+        <div className="relative mx-auto -mt-24 w-full max-w-xs flex-shrink-0 group sm:-mt-28 md:mx-0 md:mt-0 md:w-1/3 md:max-w-none">
            <img 
               src={movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : buildPosterFallback(movie.title || movie.name)} 
               alt={movie.title}
@@ -186,26 +186,26 @@ const MovieDetails = () => {
            </button>
         </div>
 
-        <div className="w-full md:w-2/3 text-white">
-          <h1 className="text-5xl font-bold mb-2">{movie.title || movie.name}</h1>
-          <div className="flex items-center gap-4 text-gray-400 font-semibold mb-6">
+        <div className="w-full text-white md:w-2/3">
+          <h1 className="mb-2 text-3xl font-bold sm:text-4xl md:text-5xl">{movie.title || movie.name}</h1>
+          <div className="mb-6 flex flex-wrap items-center gap-3 text-sm font-semibold text-gray-400 sm:gap-4 sm:text-base">
             <span className="text-green-500">{Math.round((movie.vote_average || 0) * 10)}% Match</span>
             <span>{movie.release_date?.substring(0,4)}</span>
             <span className="px-2 py-0.5 border border-gray-600 rounded text-sm">HD</span>
           </div>
 
-          <p className="text-lg leading-relaxed text-gray-200 mb-8 max-w-2xl text-shadow">
+          <p className="mb-8 max-w-2xl text-base leading-7 text-gray-200 text-shadow sm:text-lg sm:leading-relaxed">
             {movie.overview}
           </p>
 
-          <div className="flex gap-4 mb-12">
+          <div className="mb-12 flex flex-col gap-3 sm:flex-row sm:gap-4">
              <button
                 onClick={handlePlay}
-                className="bg-white text-black px-8 py-3 rounded-md font-bold text-xl hover:bg-gray-300 transition flex items-center gap-2"
+                className="flex items-center justify-center gap-2 rounded-md bg-white px-6 py-3 text-lg font-bold text-black transition hover:bg-gray-300 sm:px-8 sm:text-xl"
              >
                 <Play fill="black" /> Play
              </button>
-             <button onClick={handleWatchlist} className="bg-gray-600/70 text-white px-8 py-3 rounded-md font-bold text-xl hover:bg-gray-600 transition flex items-center gap-2">
+             <button onClick={handleWatchlist} className="flex items-center justify-center gap-2 rounded-md bg-gray-600/70 px-6 py-3 text-lg font-bold text-white transition hover:bg-gray-600 sm:px-8 sm:text-xl">
                 <Plus /> {isSaved ? 'Saved' : 'My List'}
              </button>
           </div>
@@ -217,7 +217,7 @@ const MovieDetails = () => {
       </div>
 
       {showWatchSection && (
-        <div ref={watchSectionRef} className="max-w-7xl mx-auto px-8 py-16">
+        <div ref={watchSectionRef} className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14 md:px-8 md:py-16">
           <h2 className="text-2xl font-bold text-white mb-6">Now Playing</h2>
           {trailerUrl ? (
             <div className="rounded-xl overflow-hidden shadow-2xl">
@@ -275,7 +275,7 @@ const MovieDetails = () => {
       )}
 
       {trailerUrl && !showWatchSection && (
-        <div className="max-w-7xl mx-auto px-8 py-16">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14 md:px-8 md:py-16">
           <h2 className="text-2xl font-bold text-white mb-6">Official Trailer</h2>
           <div className="rounded-xl overflow-hidden shadow-2xl">
             <iframe
@@ -290,9 +290,9 @@ const MovieDetails = () => {
       )}
 
       {recommendations.length > 0 && (
-        <div className="max-w-7xl mx-auto px-8 pb-20">
+        <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 md:px-8 md:pb-20">
           <h2 className="text-2xl font-bold text-white mb-6">ML Recommendations</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-4 lg:grid-cols-5 lg:gap-6">
             {recommendations.map((item, index) => {
               const movieId = item.movie_id || item.id || `rec-${index}`;
               const movieLabel = item.title || item.name || item.original_title || `item-${index}`;

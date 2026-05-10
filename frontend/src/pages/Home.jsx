@@ -22,7 +22,7 @@ const Home = () => {
         Note: These endpoints wrap the TMDB API on our backend. 
         If the keys aren't set, the MovieRow will display mock items.
       */}
-      <div className="-mt-32 z-30 relative">
+      <div className="relative z-30 -mt-16 sm:-mt-20 md:-mt-24 lg:-mt-32">
         <MovieRow 
           title="AIMOVIE Exclusives" 
           fetchUrl="/api/movies/discover?with_networks=28" 
@@ -46,14 +46,14 @@ const Home = () => {
         />
         
         {/* Interactive Language Selection Section */}
-        <div className="mt-8 ml-8 pr-8">
-          <h2 className="text-xl md:text-2xl font-bold text-white mb-4">Browse by Language</h2>
+        <div className="mt-8 px-4 sm:px-6 md:px-8">
+          <h2 className="mb-4 text-xl font-bold text-white md:text-2xl">Browse by Language</h2>
           <div className="flex flex-wrap gap-3 mb-6">
             {LANGUAGES.map((lang) => (
               <button
                 key={lang.code}
                 onClick={() => setSelectedLanguage(lang)}
-                className={`px-5 py-2 rounded-full font-semibold transition duration-300 ${
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition duration-300 sm:px-5 sm:text-base ${
                   selectedLanguage.code === lang.code
                     ? 'bg-netflix-red text-white'
                     : 'bg-white/10 text-gray-300 hover:bg-white/20 hover:text-white'

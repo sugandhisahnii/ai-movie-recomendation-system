@@ -171,25 +171,25 @@ const MovieRow = ({ title, fetchUrl, isLargeRow = false }) => {
   const activeMovie = movies.find((movie) => movie.id === activeMovieId) || null;
 
   return (
-    <div ref={wrapperRef} className="ml-8 text-white mt-5 mb-2 relative group">
-      <h2 className="text-xl md:text-2xl font-bold mb-4">{title}</h2>
+    <div ref={wrapperRef} className="relative mb-2 mt-5 px-4 text-white group sm:px-6 md:px-8">
+      <h2 className="mb-4 text-lg font-bold sm:text-xl md:text-2xl">{title}</h2>
       
       <ChevronLeft 
         onClick={() => handleClick('left')}
-        className="absolute top-0 bottom-0 left-[-30px] my-auto bg-black/50 text-white rounded-full z-40 opacity-0 group-hover:opacity-100 cursor-pointer hidden md:block hover:scale-110 transition"
+        className="absolute bottom-0 left-1 top-0 my-auto hidden cursor-pointer rounded-full bg-black/50 text-white opacity-0 transition hover:scale-110 group-hover:opacity-100 md:block z-40"
         size={40}
       />
       
       <div className="relative">
         <div
           ref={rowRef}
-          className={`flex overflow-x-scroll overflow-y-visible scrollbar-hide px-0 ${isLargeRow ? 'py-2' : 'py-2'} gap-3 items-start`}
+          className="scrollbar-hide flex items-start gap-2 overflow-x-scroll overflow-y-visible py-2 sm:gap-3"
         >
           {!movies.length ? (
             Array.from({ length: isLargeRow ? 6 : 5 }).map((_, index) => (
               <div
                 key={`loading-${index}`}
-                className={`animate-pulse rounded-md bg-gray-800/80 ${isLargeRow ? 'h-64 w-44' : 'h-36 w-72'} min-w-[200px] flex-none`}
+                className={`animate-pulse rounded-md bg-gray-800/80 ${isLargeRow ? 'h-56 w-36 sm:h-64 sm:w-44' : 'h-32 w-56 sm:h-36 sm:w-72'} min-w-0 flex-none`}
               />
             ))
           ) : null}
@@ -204,13 +204,13 @@ const MovieRow = ({ title, fetchUrl, isLargeRow = false }) => {
             return (
               <div
                 key={`${movie.id}-${i}`}
-                className={`relative flex-none ${isLargeRow ? 'w-44 min-w-[176px]' : 'w-72 min-w-[288px]'}`}
+                className={`relative flex-none ${isLargeRow ? 'w-36 sm:w-44' : 'w-56 sm:w-64 md:w-72'}`}
                 onMouseEnter={(event) => handleHoverStart(movie, event.currentTarget)}
                 onMouseLeave={handleHoverEnd}
               >
                 <Link to={`/movie/${movie.id}`} className="block">
                   <img
-                    className={`object-cover rounded-md transition duration-300 cursor-pointer ${isLargeRow ? 'h-64 w-44' : 'h-40 w-72'} min-w-[200px] ${isActive ? 'opacity-100 scale-[0.98]' : 'hover:scale-[1.02]'}`}
+                    className={`cursor-pointer rounded-md object-cover transition duration-300 ${isLargeRow ? 'h-56 w-36 sm:h-64 sm:w-44' : 'h-32 w-56 sm:h-36 sm:w-64 md:h-40 md:w-72'} ${isActive ? 'scale-[0.98] opacity-100' : 'hover:scale-[1.02]'}`}
                     src={imageUrl}
                     alt={movie.title || movie.name}
                   />
@@ -222,7 +222,7 @@ const MovieRow = ({ title, fetchUrl, isLargeRow = false }) => {
 
         {activeMovie && previewLayout ? (
           <div
-            className="pointer-events-none absolute inset-0 z-50 overflow-visible"
+            className="pointer-events-none absolute inset-0 z-50 hidden overflow-visible lg:block"
           >
             <div
               className="pointer-events-auto absolute overflow-hidden rounded-2xl border border-white/10 bg-[#181818] shadow-[0_24px_70px_rgba(0,0,0,0.72)]"
@@ -327,7 +327,7 @@ const MovieRow = ({ title, fetchUrl, isLargeRow = false }) => {
 
       <ChevronRight 
         onClick={() => handleClick('right')}
-        className="absolute top-0 bottom-0 right-2 my-auto bg-black/50 text-white rounded-full z-40 opacity-0 group-hover:opacity-100 cursor-pointer hidden md:block hover:scale-110 transition"
+        className="absolute bottom-0 right-1 top-0 my-auto hidden cursor-pointer rounded-full bg-black/50 text-white opacity-0 transition hover:scale-110 group-hover:opacity-100 md:block z-40"
         size={40}
       />
     </div>
