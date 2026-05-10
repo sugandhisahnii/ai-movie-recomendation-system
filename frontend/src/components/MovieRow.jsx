@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { buildYouTubeEmbedUrl, pickTrailer } from '../utils/trailers';
 import API_BASE_URL from '../config/api';
 
-const REQUEST_TIMEOUT_MS = 4000;
+const REQUEST_TIMEOUT_MS = 30000;
 
 const buildFallbackImage = (title, isLargeRow) => {
   const width = isLargeRow ? 500 : 500;
@@ -86,14 +86,8 @@ const MovieRow = ({ title, fetchUrl, isLargeRow = false }) => {
            return;
         }
       } catch (err) {
-        const isExpectedFallback =
-          err.code === 'ERR_NETWORK' ||
-          err.code === 'ECONNABORTED' ||
-          err.code === 'ERR_CANCELED' ||
-          controller.signal.aborted;
-
-        if (!isExpectedFallback) {
-          console.error('Failed to fetch movies for row', err);
+        if (!controller.signal.aborted && err.code !== 'ERR_CANCELED') {
+          console.error('Failed to fetch movies for row:', err);
         }
       }
 

@@ -6,7 +6,7 @@ import heroImage from '../assets/hero.png';
 import { buildYouTubeEmbedUrl, pickTrailer } from '../utils/trailers';
 import API_BASE_URL from '../config/api';
 
-const REQUEST_TIMEOUT_MS = 4000;
+const REQUEST_TIMEOUT_MS = 30000;
 const FALLBACK_HERO = {
   id: 900001,
   title: 'Midnight Protocol',
@@ -48,14 +48,8 @@ const HeroBanner = ({ refreshKey = 0 }) => {
           return;
         }
       } catch (err) {
-        const isExpectedFallback =
-          err.code === 'ERR_NETWORK' ||
-          err.code === 'ECONNABORTED' ||
-          err.code === 'ERR_CANCELED' ||
-          controller.signal.aborted;
-
-        if (!isExpectedFallback) {
-          console.error('Error fetching trending for banner', err);
+        if (!controller.signal.aborted && err.code !== 'ERR_CANCELED') {
+          console.error('Error fetching trending for banner:', err);
         }
       }
 
@@ -92,7 +86,7 @@ const HeroBanner = ({ refreshKey = 0 }) => {
       <div className="absolute inset-0 bg-black/20" />
       <div className="absolute w-full h-[80vh] bg-gradient-to-t from-netflix-dark via-black/25 to-black/70 z-10" />
       <div className="absolute w-full h-[80vh] bg-gradient-to-r from-netflix-dark via-black/45 to-transparent z-10" />
-      
+
       <div className="absolute top-[35%] w-full pl-8 md:pl-16 z-20">
         <p className="mb-4 text-xs font-semibold uppercase tracking-[0.4em] text-red-200/80">
           Featured suggestion
